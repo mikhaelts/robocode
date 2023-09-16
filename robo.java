@@ -4,6 +4,7 @@ import robocode.*;
 
 public class bubllebi extends Robot {
     private boolean isMovingForward = true;
+    private double lastEnemyEnergy = 100; // Inicializa com a energia máxima do inimigo
 
     public void run() {
         while (true) {
@@ -17,7 +18,6 @@ public class bubllebi extends Robot {
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
-        // Calcula o ângulo para mirar na direção do inimigo
         double enemyBearing = e.getBearing();
         double gunTurnAngle = getHeading() + enemyBearing - getGunHeading();
 
@@ -25,19 +25,22 @@ public class bubllebi extends Robot {
         turnGunRight(gunTurnAngle);
 
         // Verifica se há uma chance razoável de acertar o tiro antes de atirar
-        if (Math.abs(gunTurnAngle) <= 10) {
-            fire(2); // Atira com potência 2 quando o inimigo está alinhado
+        if (Math.abs(gunTurnAngle) <= 10 && getEnergy() > 20) {
+            fire(2); // Atira com potência 2 quando o inimigo está alinhado e você tem energia suficiente
         }
 
-        // Esquiva-se de balas inimigas
-        if (e.getDistance() < 200) {
+        // Estratégia de esquiva de balas
+        double enemyEnergy = e.getEnergy();
+        if (lastEnemyEnergy > enemyEnergy) {
+            // O inimigo atirou, portanto, ajuste o movimento para evitar tiros
             if (isMovingForward) {
-                back(50); // Move para trás para evitar balas de perto
+                back(50); // Move para trás para evitar balas
                 isMovingForward = false;
             } else {
                 ahead(50); // Move para frente após se esquivar
                 isMovingForward = true;
             }
         }
+        lastEnemyEnergy = enemyEnergy;
     }
 }
